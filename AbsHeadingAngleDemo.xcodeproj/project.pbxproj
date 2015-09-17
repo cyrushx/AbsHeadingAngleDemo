@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		A822DA3D1BA6650D0052A8E9 /* arrow.png in Resources */ = {isa = PBXBuildFile; fileRef = A822DA3C1BA6650D0052A8E9 /* arrow.png */; settings = {ASSET_TAGS = (); }; };
 		A8EE8F601BA62DED00CE0EAE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8EE8F5F1BA62DED00CE0EAE /* AppDelegate.swift */; };
 		A8EE8F621BA62DED00CE0EAE /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8EE8F611BA62DED00CE0EAE /* ViewController.swift */; };
 		A8EE8F651BA62DED00CE0EAE /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = A8EE8F631BA62DED00CE0EAE /* Main.storyboard */; };
@@ -26,6 +27,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		A822DA3C1BA6650D0052A8E9 /* arrow.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = arrow.png; sourceTree = "<group>"; };
 		A8EE8F5A1BA62DED00CE0EAE /* AbsHeadingAngleDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AbsHeadingAngleDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A8EE8F5E1BA62DED00CE0EAE /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		A8EE8F5F1BA62DED00CE0EAE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -80,6 +82,7 @@
 				A8EE8F5F1BA62DED00CE0EAE /* AppDelegate.swift */,
 				A8EE8F611BA62DED00CE0EAE /* ViewController.swift */,
 				A8EE8F631BA62DED00CE0EAE /* Main.storyboard */,
+				A822DA3C1BA6650D0052A8E9 /* arrow.png */,
 				A8EE8F661BA62DED00CE0EAE /* Images.xcassets */,
 				A8EE8F681BA62DED00CE0EAE /* LaunchScreen.xib */,
 				A8EE8F5D1BA62DED00CE0EAE /* Supporting Files */,
@@ -156,11 +159,13 @@
 		A8EE8F521BA62DED00CE0EAE /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
+				LastSwiftUpdateCheck = 0700;
 				LastUpgradeCheck = 0640;
 				ORGANIZATIONNAME = "Cyrus Huang";
 				TargetAttributes = {
 					A8EE8F591BA62DED00CE0EAE = {
 						CreatedOnToolsVersion = 6.4;
+						DevelopmentTeam = T5K5B6PHZ9;
 					};
 					A8EE8F6E1BA62DED00CE0EAE = {
 						CreatedOnToolsVersion = 6.4;
@@ -195,6 +200,7 @@
 				A8EE8F651BA62DED00CE0EAE /* Main.storyboard in Resources */,
 				A8EE8F6A1BA62DED00CE0EAE /* LaunchScreen.xib in Resources */,
 				A8EE8F671BA62DED00CE0EAE /* Images.xcassets in Resources */,
+				A822DA3D1BA6650D0052A8E9 /* arrow.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -342,9 +348,12 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				INFOPLIST_FILE = AbsHeadingAngleDemo/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE = "";
 			};
 			name = Debug;
 		};
@@ -352,9 +361,12 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				INFOPLIST_FILE = AbsHeadingAngleDemo/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE = "";
 			};
 			name = Release;
 		};
@@ -411,6 +423,7 @@
 				A8EE8F7B1BA62DED00CE0EAE /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		A8EE8F7C1BA62DED00CE0EAE /* Build configuration list for PBXNativeTarget "AbsHeadingAngleDemoTests" */ = {
 			isa = XCConfigurationList;
@@ -419,6 +432,7 @@
 				A8EE8F7E1BA62DED00CE0EAE /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
