@@ -1,8 +1,8 @@
 //
 //  ViewController.swift
-//  AbsHeadingAngleDemo
+//  DRWithoutEKF
 //
-//  Created by Cyrus Huang on 9/13/15.
+//  Created by Cyrus Huang on 9/20/15.
 //  Copyright (c) 2015 Cyrus Huang. All rights reserved.
 //
 
@@ -18,17 +18,62 @@ class ViewController: UIViewController {
   var yawValue:   Int = 0
   
   // draw variables
-  var lastPoint = CGPoint.zero
-  var red: CGFloat = 0.0
-  var green: CGFloat = 0.0
-  var blue: CGFloat = 255.0
+  var lastPoint    = CGPoint.zero
+  var currentPoint = CGPoint.zero
+  var red: CGFloat        = 0.0
+  var green: CGFloat      = 0.0
+  var blue: CGFloat       = 255.0
   var brushWidth: CGFloat = 5.0
-  var opacity: CGFloat = 1.0
+  var opacity: CGFloat    = 1.0
   
-  @IBOutlet weak var rollLabel: UILabel!
+  // device variables
+  let screenWidth: CGFloat  = 320
+  let screenHeight: CGFloat = 568
+  
+  // DR variables
+  var accX:     Double = 0.0
+  var accY:     Double = 0.0
+  var velX:     Double = 0.0
+  var velY:     Double = 0.0
+  var posX:     Double = 0.0
+  var posY:     Double = 0.0
+  var posdX:    Double = 0.0
+  var posdY:    Double = 0.0
+  var accPreX:  Double = 0.0
+  var accPreY:  Double = 0.0
+  var velPreX:  Double = 0.0
+  var velPreY:  Double = 0.0
+  var posPreX:  Double = 0.0
+  var posPreY:  Double = 0.0
+  var accRawX:  Double = 0.0
+  var accRawY:  Double = 0.0
+  var rollRad:  Double = 0.0
+  var pitchRad: Double = 0.0
+  var yawRad:   Double = 0.0
+  
+  let tUpdateInterval: Double = 0.05
+  let accXThreshold:   Double = 0.02
+  let accYThreshold:   Double = 0.02
+  let accXOffset:      Double = 0.0158
+  let accYOffset:      Double = 0.0184
+  let noMovement:      Int    = 3
+  let scaleFactor:     Double = 2000
+  var noAccXCount:     Int    = 0
+  var noAccYCount:     Int    = 0
+  
+  // IBOutlets
+  @IBOutlet weak var rollLabel:  UILabel!
   @IBOutlet weak var pitchLabel: UILabel!
-  @IBOutlet weak var yawLabel: UILabel!
-  @IBOutlet weak var rotateImg: UIImageView!
+  @IBOutlet weak var yawLabel:   UILabel!
+  
+  @IBOutlet weak var accXLabel: UILabel!
+  @IBOutlet weak var accYLabel: UILabel!
+  @IBOutlet weak var velXLabel: UILabel!
+  @IBOutlet weak var velYLabel: UILabel!
+  @IBOutlet weak var posXLabel: UILabel!
+  @IBOutlet weak var posYLabel: UILabel!
+  
+  @IBOutlet weak var rotateImg:     UIImageView!
   @IBOutlet weak var pathImageView: UIImageView!
   
   var motionManager = CMMotionManager()
@@ -36,12 +81,15 @@ class ViewController: UIViewController {
   override func viewDidLoad() {
     super.viewDidLoad()
     
-    motionManager.deviceMotionUpdateInterval = 0.1
+    motionManager.deviceMotionUpdateInterval  = tUpdateInterval
+    motionManager.accelerometerUpdateInterval = tUpdateInterval
     motionManager.startDeviceMotionUpdates()
+    motionManager.startAccelerometerUpdates()
     
     // update altitude data
     if motionManager.deviceMotionAvailable{
       let queue = NSOperationQueue()
+      
       // set frame to XArbitraryCorrectedZVertical
       // shoud lbe calibrated XTrueNorthZVertical
       motionManager.startDeviceMotionUpdatesUsingReferenceFrame(CMAttitudeReferenceFrame.XArbitraryCorrectedZVertical, toQueue: queue, withHandler:
@@ -60,36 +108,6 @@ class ViewController: UIViewController {
     }
     
     lastPoint = pathImageView.center
-    
-    print("x  = \(lastPoint.x)")
-    print("y  = \(lastPoint.y)")
-    
-    var currentPoint: CGPoint = lastPoint
-   
-    for i in 1...20 {
-      currentPoint.y = lastPoint.y - 5
-      currentPoint.x = lastPoint.x
-      
-      drawLineFrom(lastPoint, toPoint: currentPoint)
-      
-      lastPoint = currentPoint
-      
-      print("x  = \(lastPoint.x)")
-      print("y  = \(lastPoint.y)")
-    }
-    
-    for i in 1...20 {
-      currentPoint.y = lastPoint.y
-      currentPoint.x = lastPoint.x - 5
-      
-      drawLineFrom(lastPoint, toPoint: currentPoint)
-      
-      lastPoint = currentPoint
-      
-      print("x  = \(lastPoint.x)")
-      print("y  = \(lastPoint.y)")
-    }
-    
   }
   
   // method modiefied from:
@@ -127,7 +145,74 @@ class ViewController: UIViewController {
     rollValue  = Int(data.attitude.roll / M_PI * 180)
     pitchValue = Int(data.attitude.pitch / M_PI * 180)
     yawValue   = Int(data.attitude.yaw / M_PI * 180)
+    
+    accRawX = data.userAcceleration.x
+    accRawY = data.userAcceleration.y
+    
+    // convert acc data units from g to m/s^2
+    //accX *= 9.81
+    //accY *= 9.81
+    
+    // raw acceleration data calibration
+    //self.accRawX -= accXOffset
+    //self.accRawY -= accYOffset
+    print("Acc Raw X: \(accRawX), Acc Raw Y: \(accRawY)")
+    
+    if (abs(accRawX) < accXThreshold)
+    {
+      self.accRawX = 0
+    }
+    
+    if (abs(accRawY) < accYThreshold)
+    {
+      self.accRawY = 0
+    }
+    
+    // check for the end of movement
+    if (self.accRawX == 0) {
+      noAccXCount++
+    } else {
+      noAccXCount = 0
+    }
+    
+    if (noAccXCount > noMovement)
+    {
+      self.velX = 0
+      self.velPreX = 0
+      noAccXCount = 0
+    }
+    
+    if (self.accY == 0) {
+      noAccYCount++
+    } else {
+      noAccYCount = 0
+    }
+    
+    if (noAccYCount > noMovement)
+    {
+      self.velY = 0
+      self.velPreY = 0
+      noAccYCount = 0
+    }
+    
+    // first transform acc to global frame
+    rollRad      = data.attitude.roll
+    pitchRad     = data.attitude.pitch
+    yawRad       = data.attitude.yaw
 
+    self.accX = self.accRawX * cos(yawRad) - self.accRawY * sin(yawRad)
+    self.accY = self.accRawX * sin(yawRad) + self.accRawY * cos(yawRad)
+    
+    print("Acc     X: \(accX), Acc     Y: \(accY)")
+    
+    // dead reckoning
+    // leapfrog integration
+    self.velX = self.velPreX + (self.accX + self.accPreX) / 2.0 * tUpdateInterval
+    self.velY = self.velPreY + (self.accY + self.accPreY) / 2.0 * tUpdateInterval
+    
+    self.posX = self.posPreX + self.velPreX * tUpdateInterval + self.accPreX * tUpdateInterval * tUpdateInterval / 2.0
+    self.posY = self.posPreY + self.velPreY * tUpdateInterval + self.accPreY * tUpdateInterval * tUpdateInterval / 2.0
+    
     // debug
     /*
     print("Roll  = \(rollValue)")
@@ -138,16 +223,42 @@ class ViewController: UIViewController {
     // update label texts faster 
     // see http://stackoverflow.com/questions/29222833/label-not-updating-swift
     dispatch_async(dispatch_get_main_queue(), {
-      self.rollLabel.text  = String(self.rollValue)
-      self.pitchLabel.text = String(self.pitchValue)
-      self.yawLabel.text   = String(self.yawValue)
+      self.rollLabel.text  = String(self.rollRad  )
+      self.pitchLabel.text = String(self.pitchRad)
+      self.yawLabel.text   = String(self.yawRad)
+      
+      self.accXLabel.text  = String(self.accX)
+      self.accYLabel.text  = String(self.accY)
+      
+      self.velXLabel.text  = String(self.velX)
+      self.velYLabel.text  = String(self.velY)
+
+      self.posXLabel.text  = String(self.posX * 1000)
+      self.posYLabel.text  = String(self.posY * 1000)
       
       UIView.animateWithDuration(0.1, animations: {
-        self.rotateImg.transform = CGAffineTransformMakeRotation(-CGFloat(data.attitude.yaw))
+        let rotation    = CGAffineTransformMakeRotation(-CGFloat(data.attitude.yaw))
+        let translation = CGAffineTransformMakeTranslation(CGFloat(-self.posX * self.scaleFactor), CGFloat(self.posY * self.scaleFactor))
+        self.rotateImg.transform = CGAffineTransformConcat(rotation, translation)
       })
+      
+      // draw path
+      self.currentPoint.x = CGFloat(-self.posX * self.scaleFactor) + self.screenWidth / 2
+      self.currentPoint.y = CGFloat(self.posY * self.scaleFactor) + self.screenHeight / 2
+      
+      self.drawLineFrom(self.lastPoint, toPoint: self.currentPoint)
+      
+      self.lastPoint = self.currentPoint
+      
     });
     
-    
+    // set up for next update
+    self.accPreX = self.accX
+    self.accPreY = self.accY
+    self.velPreX = self.velX
+    self.velPreY = self.velY
+    self.posPreX = self.posX
+    self.posPreY = self.posY
   }
 
   override func didReceiveMemoryWarning() {

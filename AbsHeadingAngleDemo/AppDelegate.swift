@@ -1,8 +1,8 @@
 //
 //  AppDelegate.swift
-//  AbsHeadingAngleDemo
+//  DRWithoutEKF
 //
-//  Created by Cyrus Huang on 9/13/15.
+//  Created by Cyrus Huang on 9/20/15.
 //  Copyright (c) 2015 Cyrus Huang. All rights reserved.
 //
 
