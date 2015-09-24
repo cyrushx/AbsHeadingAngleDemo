@@ -55,7 +55,7 @@ class ViewController: UIViewController {
   
   let tUpdateInterval: Double = 0.01
   let accXThresholdL:  Double = 0.002
-  let accYThresholdL:  Double = 0.002
+  let accYThresholdL:  Double = 0.001
   let accXThresholdH:  Double = 0.1
   let accYThresholdH:  Double = 0.1
   let accXOffset:      Double = 0.0158
@@ -106,7 +106,7 @@ class ViewController: UIViewController {
             return
           }
       
-          self.outputData(data)
+          self.outputDataY(data)
           
         }
       )
@@ -145,7 +145,146 @@ class ViewController: UIViewController {
     UIGraphicsEndImageContext()
     
   }
+  
+  func outputDataY(data: CMDeviceMotion) {
+    
+    // turn Euler angles into degree
+    rollValue  = Int(data.attitude.roll / M_PI * 180)
+    pitchValue = Int(data.attitude.pitch / M_PI * 180)
+    yawValue   = Int(data.attitude.yaw / M_PI * 180)
+    
+    accRawX = 0
+    accRawY = data.userAcceleration.y
+    
+    if (accRawY > 0)
+    {
+      accRawY = 0
+    }
+    
+    var accRawYOld = accRawY
+    
+    if (abs(accRawY) > accYThresholdH)
+    {
+      self.accRawY = 0
+    }
+    
+    // low pass filter the data
+    accRawY = (accRawY * kFilteringFactor) + (accRawPreY * (1 - kFilteringFactor))
+    
+    accRawPreY = accRawY
+    
+    // convert acc data units from g to m/s^2
+    //accX *= 9.81
+    //accY *= 9.81
+    
+    if (abs(accRawY) < accYThresholdL)
+    {
+      self.accRawY = 0
+    }
+    
+    // first transform acc to global frame
+    rollRad      = data.attitude.roll
+    pitchRad     = data.attitude.pitch
+    yawRad       = data.attitude.yaw
+    
+    self.accX = self.accRawX * cos(yawRad) - self.accRawY * sin(yawRad)
+    self.accY = self.accRawX * sin(yawRad) + self.accRawY * cos(yawRad)
+    
+    //self.accX *= 9.8
+    //self.accY *= 9.8
+    
+    // check for the end of movement
+    if (self.accX == 0) {
+      noAccXCount++
+    } else {
+      noAccXCount = 0
+    }
+    
+    if (noAccXCount >= noMovement)
+    {
+      self.accX    = 0
+      self.accPreX = 0
+      self.velPreX = 0
+      noAccXCount  = 0
+    }
+    
+    if (self.accY == 0) {
+      noAccYCount++
+    } else {
+      noAccYCount = 0
+    }
+    
+    if (noAccYCount >= noMovement)
+    {
+      self.accY    = 0
+      self.accPreY = 0
+      self.velPreY = 0
+      noAccYCount = 0
+    }
+    
+    //print("\(self.accY)")
+    
+    //print("Acc     X: \(accX), Acc     Y: \(accY)")
+    
+    // dead reckoning
+    // leapfrog integration
+    self.velX = self.velPreX + (self.accX + self.accPreX) / 2.0 * tUpdateInterval
+    self.velY = self.velPreY + (self.accY + self.accPreY) / 2.0 * tUpdateInterval
+    
+    self.posX = self.posPreX + self.velPreX * tUpdateInterval + self.accPreX * tUpdateInterval * tUpdateInterval / 2.0
+    self.posY = self.posPreY + self.velPreY * tUpdateInterval + self.accPreY * tUpdateInterval * tUpdateInterval / 2.0
+    
+    print("\(accRawX), \(accX), \(velX), \(posX)")
+    
+    // debug
+    /*
+    print("Roll  = \(rollValue)")
+    print("Pitch = \(pitchValue)")
+    print("Yaw   = \(yawValue)")
+    */
+    
+    // update label texts faster
+    // see http://stackoverflow.com/questions/29222833/label-not-updating-swift
+    dispatch_async(dispatch_get_main_queue(), {
+      self.rollLabel.text  = String(self.rollRad  )
+      self.pitchLabel.text = String(self.pitchRad)
+      self.yawLabel.text   = String(self.yawRad)
       
+      self.accXLabel.text  = String(self.accX)
+      self.accYLabel.text  = String(self.accY)
+      
+      self.velXLabel.text  = String(self.velX)
+      self.velYLabel.text  = String(self.velY)
+      
+      self.posXLabel.text  = String(self.posX * 1000)
+      self.posYLabel.text  = String(self.posY * 1000)
+      
+      UIView.animateWithDuration(0.1, animations: {
+        let rotation    = CGAffineTransformMakeRotation(-CGFloat(data.attitude.yaw))
+        let translation = CGAffineTransformMakeTranslation(CGFloat(-self.posX * self.scaleFactor), CGFloat(self.posY * self.scaleFactor))
+        self.rotateImg.transform = CGAffineTransformConcat(rotation, translation)
+      })
+      
+      // draw path
+      self.currentPoint.x = CGFloat(-self.posX * self.scaleFactor) + self.screenWidth / 2
+      self.currentPoint.y = CGFloat(self.posY * self.scaleFactor) + self.screenHeight / 2
+      
+      self.drawLineFrom(self.lastPoint, toPoint: self.currentPoint)
+      
+      self.lastPoint = self.currentPoint
+      
+    });
+    
+    // set up for next update
+    self.accPreX = self.accX
+    self.accPreY = self.accY
+    self.velPreX = self.velX
+    self.velPreY = self.velY
+    self.posPreX = self.posX
+    self.posPreY = self.posY
+  }
+  
+  /*
   func outputData(data: CMDeviceMotion) {
     
     // turn Euler angles into degree
@@ -292,7 +431,7 @@ class ViewController: UIViewController {
     self.velPreY = self.velY
     self.posPreX = self.posX
     self.posPreY = self.posY
-  }
+  }*/
 
   override func didReceiveMemoryWarning() {
     super.didReceiveMemoryWarning()
