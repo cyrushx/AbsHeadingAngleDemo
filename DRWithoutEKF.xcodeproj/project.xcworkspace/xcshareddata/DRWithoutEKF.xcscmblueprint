@@ -1,0 +1,30 @@
+{
+  "DVTSourceControlWorkspaceBlueprintPrimaryRemoteRepositoryKey" : "66A54EE1966AB1D40FB46D845EF0C99B22298C4A",
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyRepositoryLocationsKey" : {
+
+  },
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyStatesKey" : {
+    "66A54EE1966AB1D40FB46D845EF0C99B22298C4A" : 0,
+    "23F4BD4E36EE5891DC4906EC75275214587BB540" : 0
+  },
+  "DVTSourceControlWorkspaceBlueprintIdentifierKey" : "D986A486-1050-417F-AB3A-856FDD1CD1D5",
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyPathsKey" : {
+    "66A54EE1966AB1D40FB46D845EF0C99B22298C4A" : "DRWithoutEKF\/",
+    "23F4BD4E36EE5891DC4906EC75275214587BB540" : ""
+  },
+  "DVTSourceControlWorkspaceBlueprintNameKey" : "DRWithoutEKF",
+  "DVTSourceControlWorkspaceBlueprintVersion" : 204,
+  "DVTSourceControlWorkspaceBlueprintRelativePathToProjectKey" : "DRWithoutEKF.xcodeproj",
+  "DVTSourceControlWorkspaceBlueprintRemoteRepositoriesKey" : [
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "ssh:\/\/knuth.cs.hmc.edu\/clinic\/2015\/gimbal15\/git\/project.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "23F4BD4E36EE5891DC4906EC75275214587BB540"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/cyrushx\/AbsHeadingAngleDemo.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "66A54EE1966AB1D40FB46D845EF0C99B22298C4A"
+    }
+  ]
+}

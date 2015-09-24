@@ -31,35 +31,42 @@ class ViewController: UIViewController {
   let screenHeight: CGFloat = 568
   
   // DR variables
-  var accX:     Double = 0.0
-  var accY:     Double = 0.0
-  var velX:     Double = 0.0
-  var velY:     Double = 0.0
-  var posX:     Double = 0.0
-  var posY:     Double = 0.0
-  var posdX:    Double = 0.0
-  var posdY:    Double = 0.0
-  var accPreX:  Double = 0.0
-  var accPreY:  Double = 0.0
-  var velPreX:  Double = 0.0
-  var velPreY:  Double = 0.0
-  var posPreX:  Double = 0.0
-  var posPreY:  Double = 0.0
-  var accRawX:  Double = 0.0
-  var accRawY:  Double = 0.0
-  var rollRad:  Double = 0.0
-  var pitchRad: Double = 0.0
-  var yawRad:   Double = 0.0
+  var accX:       Double = 0.0
+  var accY:       Double = 0.0
+  var velX:       Double = 0.0
+  var velY:       Double = 0.0
+  var posX:       Double = 0.0
+  var posY:       Double = 0.0
+  var posdX:      Double = 0.0
+  var posdY:      Double = 0.0
+  var accPreX:    Double = 0.0
+  var accPreY:    Double = 0.0
+  var velPreX:    Double = 0.0
+  var velPreY:    Double = 0.0
+  var posPreX:    Double = 0.0
+  var posPreY:    Double = 0.0
+  var accRawX:    Double = 0.0
+  var accRawY:    Double = 0.0
+  var accRawPreX: Double = 0.0
+  var accRawPreY: Double = 0.0
+  var rollRad:    Double = 0.0
+  var pitchRad:   Double = 0.0
+  var yawRad:     Double = 0.0
   
-  let tUpdateInterval: Double = 0.05
-  let accXThreshold:   Double = 0.02
-  let accYThreshold:   Double = 0.02
+  let tUpdateInterval: Double = 0.01
+  let accXThresholdL:  Double = 0.002
+  let accYThresholdL:  Double = 0.002
+  let accXThresholdH:  Double = 0.1
+  let accYThresholdH:  Double = 0.1
   let accXOffset:      Double = 0.0158
   let accYOffset:      Double = 0.0184
-  let noMovement:      Int    = 3
+  let noMovement:      Int    = 2
   let scaleFactor:     Double = 2000
   var noAccXCount:     Int    = 0
   var noAccYCount:     Int    = 0
+  
+  // LPF variables
+  let kFilteringFactor: Double = 0.1
   
   // IBOutlets
   @IBOutlet weak var rollLabel:  UILabel!
@@ -149,6 +156,27 @@ class ViewController: UIViewController {
     accRawX = data.userAcceleration.x
     accRawY = data.userAcceleration.y
     
+    var accRawYOld = accRawY
+    var accRawXOld = accRawX
+    
+    // remove data that is too high
+    if (abs(accRawX) > accXThresholdH)
+    {
+      self.accRawX = 0
+    }
+    
+    if (abs(accRawY) > accYThresholdH)
+    {
+      self.accRawY = 0
+    }
+    
+    // low pass filter the data
+    accRawX = (accRawX * kFilteringFactor) + (accRawPreX * (1 - kFilteringFactor))
+    accRawY = (accRawY * kFilteringFactor) + (accRawPreY * (1 - kFilteringFactor))
+    
+    accRawPreX = accRawX
+    accRawPreY = accRawY
+    
     // convert acc data units from g to m/s^2
     //accX *= 9.81
     //accY *= 9.81
@@ -156,17 +184,24 @@ class ViewController: UIViewController {
     // raw acceleration data calibration
     //self.accRawX -= accXOffset
     //self.accRawY -= accYOffset
-    print("Acc Raw X: \(accRawX), Acc Raw Y: \(accRawY)")
     
-    if (abs(accRawX) < accXThreshold)
+    if (abs(accRawX) < accXThresholdL)
     {
       self.accRawX = 0
     }
     
-    if (abs(accRawY) < accYThreshold)
+    if (abs(accRawY) < accYThresholdL)
     {
       self.accRawY = 0
     }
+    
+    // first transform acc to global frame
+    rollRad      = data.attitude.roll
+    pitchRad     = data.attitude.pitch
+    yawRad       = data.attitude.yaw
+    
+    self.accX = self.accRawX * cos(yawRad) - self.accRawY * sin(yawRad)
+    self.accY = self.accRawX * sin(yawRad) + self.accRawY * cos(yawRad)
     
     // check for the end of movement
     if (self.accRawX == 0) {
@@ -175,35 +210,31 @@ class ViewController: UIViewController {
       noAccXCount = 0
     }
     
-    if (noAccXCount > noMovement)
+    if (noAccXCount >= noMovement)
     {
-      self.velX = 0
+      self.accX    = 0
+      self.accPreX = 0
       self.velPreX = 0
-      noAccXCount = 0
+      noAccXCount  = 0
     }
     
-    if (self.accY == 0) {
+    if (self.accRawY == 0) {
       noAccYCount++
     } else {
       noAccYCount = 0
     }
     
-    if (noAccYCount > noMovement)
+    if (noAccYCount >= noMovement)
     {
-      self.velY = 0
+      self.accY    = 0
+      self.accPreY = 0
       self.velPreY = 0
       noAccYCount = 0
     }
     
-    // first transform acc to global frame
-    rollRad      = data.attitude.roll
-    pitchRad     = data.attitude.pitch
-    yawRad       = data.attitude.yaw
-
-    self.accX = self.accRawX * cos(yawRad) - self.accRawY * sin(yawRad)
-    self.accY = self.accRawX * sin(yawRad) + self.accRawY * cos(yawRad)
+    //print("\(self.accY)")
     
-    print("Acc     X: \(accX), Acc     Y: \(accY)")
+    //print("Acc     X: \(accX), Acc     Y: \(accY)")
     
     // dead reckoning
     // leapfrog integration
@@ -212,6 +243,8 @@ class ViewController: UIViewController {
     
     self.posX = self.posPreX + self.velPreX * tUpdateInterval + self.accPreX * tUpdateInterval * tUpdateInterval / 2.0
     self.posY = self.posPreY + self.velPreY * tUpdateInterval + self.accPreY * tUpdateInterval * tUpdateInterval / 2.0
+    
+    print("\(accRawXOld), \(accRawX), \(accX), \(velX), \(posX)")
     
     // debug
     /*
